@@ -43,6 +43,7 @@ jobs:
       - run:
           name: Build front-end
           command: |
+            cd frontend
             npm i
       - save_cache:
           paths: [frontend/node_modules]
@@ -58,6 +59,7 @@ jobs:
       - run:
           name: Back-end build
           command: |
+             cd backend
              npm i
       - save_cache:
           paths: [backend/node_modules]
@@ -72,7 +74,9 @@ jobs:
           keys: [frontend-build]
       - run:
           name: Unit Test Frontend
-          command: npm run test
+          command: |
+            cd frontend
+            npm run test
                 
   test-backend:
     docker:
@@ -83,7 +87,9 @@ jobs:
           keys: [backend-build]
       - run:
           name: Unit Test Backend
-          command: npm run test
+          command: |
+            cd backend
+            npm run test
             
   scan-frontend:
     docker:
@@ -94,7 +100,9 @@ jobs:
           keys: [frontend-build]
       - run:
           name: Analyze Frontend
-          command: npm run audit
+          command: 
+            cd frontend
+            npm run audit
 
   scan-backend:
     docker:
@@ -105,7 +113,9 @@ jobs:
           keys: [backend-build]
       - run:
           name: Analyze Backend
-          command: npm run audit
+          command: |
+            cd backend
+            npm run audit
 
   deploy-infrastructure:
     docker:
