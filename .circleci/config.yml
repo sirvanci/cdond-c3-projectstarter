@@ -48,7 +48,7 @@ jobs:
             npm run build
       - save_cache:
           paths: [frontend/node_modules]
-          key: frontend-build
+          key: frontend-build-{{ .Environment.CIRCLE_SHA1 }}
 
   build-backend:
     docker:
@@ -65,7 +65,7 @@ jobs:
              npm run build
       - save_cache:
           paths: [backend/node_modules]
-          key: backend-build
+          key: backend-build-{{ .Environment.CIRCLE_SHA1 }}
 
   test-frontend:
     docker:
@@ -73,11 +73,13 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: 
+          - frontend-build-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Unit Test Frontend
           command: |
             cd frontend
+            ls
             npm run test
                 
   test-backend:
@@ -86,11 +88,13 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: 
+           - backend-build-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Unit Test Backend
           command: |
             cd backend
+            ls
             npm run test
             
   scan-frontend:
