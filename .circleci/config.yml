@@ -108,7 +108,8 @@ jobs:
       - run:
           name: Analyze Frontend
           command: |
-            cd frontend 
+            cd frontend
+            ls
             npm audit fix --audit-level=critical --force
 
   scan-backend:
