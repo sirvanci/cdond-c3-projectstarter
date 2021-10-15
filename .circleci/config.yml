@@ -44,7 +44,7 @@ jobs:
           name: Build front-end
           command: |
             cd frontend
-            npm i --package-lock-only
+            npm i
             npm run build
       - save_cache:
           paths: [frontend/node_modules]
