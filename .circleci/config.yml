@@ -103,7 +103,8 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: 
+           - frontend-build-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Analyze Frontend
           command: |
@@ -116,7 +117,8 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: 
+           - backend-build-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Analyze Backend
           command: |
