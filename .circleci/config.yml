@@ -47,8 +47,6 @@ jobs:
       - image: cimg/node:16.11.1
     steps:
       - checkout
-      - restore_cache:
-          keys: [frontend-build] 
       - run:
           name: Build front-end
           command: |
@@ -65,8 +63,6 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [backend-build]
       - run:
           name: Back-end build
           command: |
