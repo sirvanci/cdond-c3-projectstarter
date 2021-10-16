@@ -203,6 +203,7 @@ jobs:
           command: |
             apk add --update ansible
             apk add curl
+            apk add jq
       - run:
           name: Configure server
           command: |
