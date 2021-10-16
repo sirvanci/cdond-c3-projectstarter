@@ -86,7 +86,7 @@ jobs:
           name: Unit Test Frontend
           command: |
             cd frontend
-            ls
+            NODE_OPTIONS=--max_old_space_size=4096
             npm run test
       - notify-to-slack           
   test-backend:
