@@ -43,8 +43,7 @@ commands:
     description: when step is broken, notify our slack pipeline alert channel      
     steps:  
     - slack/notify:
-          event: fail
-          template: basic_fail_1        
+          event: always
 jobs:
   build-frontend:
     docker:
