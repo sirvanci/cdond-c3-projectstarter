@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  slack: circleci/slack@4.4.4
+
 commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -31,13 +34,21 @@ commands:
             #  Add revert code here. You can find this in the Getting Started section.
               exit 1
             fi
-            
+  
+  notify-to-slack:
+    description: when step is broken, notify our slack pipeline alert channel      
+    steps:  
+    - slack/notify:
+          event: fail
+          template: basic_fail_1        
 jobs:
   build-frontend:
     docker:
       - image: cimg/node:16.11.1
     steps:
       - checkout
+      - restore_cache:
+          keys: [frontend-build] 
       - run:
           name: Build front-end
           command: |
@@ -47,6 +58,7 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build-{{ .Environment.CIRCLE_SHA1 }}
+      - notify-to-slack   
 
   build-backend:
     docker:
@@ -64,6 +76,7 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build-{{ .Environment.CIRCLE_SHA1 }}
+      - notify-to-slack     
 
   test-frontend:
     docker:
@@ -79,7 +92,7 @@ jobs:
             cd frontend
             ls
             npm run test
-                
+      - notify-to-slack           
   test-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -94,7 +107,7 @@ jobs:
             cd backend
             ls
             npm run test
-            
+      - notify-to-slack       
   scan-frontend:
     docker:
       - image: cimg/node:16.11.1
@@ -109,7 +122,7 @@ jobs:
             cd frontend
             ls
             npm audit fix --audit-level=critical --force
-
+      - notify-to-slack 
   scan-backend:
     docker:
           - image: circleci/node:13.8.0
@@ -123,7 +136,7 @@ jobs:
           command: |
             cd backend
             npm audit fix --audit-level=critical --force
-
+      - notify-to-slack 
   deploy-infrastructure:
     docker:
       - image: amazon/aws-cli
@@ -138,6 +151,7 @@ jobs:
               # --stack-name "your back-end stack name with workflow id" \
               # --parameter-overrides ID="your workflow id"  
               exit 1
+      - notify-to-slack        
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -305,21 +319,28 @@ jobs:
 workflows:
   default:
     jobs:
-      - build-frontend
-      - build-backend
+      - build-frontend:
+         context: slack-secrets
+      - build-backend:
+         context: slack-secrets
       - test-frontend:
           requires: [build-frontend]
+          context: slack-secrets
       - test-backend:
           requires: [build-backend]
+          context: slack-secrets
       - scan-backend:
           requires: [build-backend]
+          context: slack-secrets
       - scan-frontend:
           requires: [build-frontend]
+          context: slack-secrets
       - deploy-infrastructure:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
               only: [test-feature-branch]
+          context: slack-secrets    
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       - run-migrations:
