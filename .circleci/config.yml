@@ -17,8 +17,8 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            # Your code here
-            exit 1
+            aws cloudformation delete-stack --stack-name udapeople-backend-<< pipeline.parameters.workflow-id >>
+            aws cloudformation delete-stack --stack-name udapeople-frontend-<< pipeline.parameters.workflow-id >>
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -167,7 +167,7 @@ jobs:
             curl -H "Content-Type: text/plain" -H "token:e8f3e291-aaf8-4f23-a5d0-6597fec2821c " \
             --request PUT \
             --data "$BACKEND_URL" \
-            https://api.memstash.io/values/backend-url-<< pipeline.parameters.workflow-id >>"}
+            https://api.memstash.io/values/backend-url"}
                     
                      
       - run:
@@ -183,11 +183,12 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" \
-            --request GET https://api.memstash.io/values/backend-url-<< pipeline.parameters.workflow-id >>.circleci/ansible/inventory.txt
+            --request GET https://api.memstash.io/values/backend-url >>.circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
+      - destroy-environment
       - notify-to-slack      
       # Here's where you will add some code to rollback on failure      
 
@@ -198,8 +199,10 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
-      # Add ssh keys with fingerprint
-      # attach workspace
+      - add_ssh_keys:
+          fingerprints: [""]
+      - attach_workspace:
+         at: ~/
       - run:
           name: Install dependencies
           command: |
