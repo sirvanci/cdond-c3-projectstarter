@@ -222,7 +222,7 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            npm run premigrations
+            npm install
             npm run migrations > output.txt
             cat output.txt
       - run:
