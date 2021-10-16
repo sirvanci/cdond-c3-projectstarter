@@ -146,8 +146,8 @@ jobs:
     steps:
       - checkout
       - run: 
-          name: install jq
-          command: yum install jq -y
+          name: install jq && tar
+          command: yum install jq tar -y
       - run:
           name: Ensure back-end infrastructure exists
           command: |
@@ -200,7 +200,7 @@ jobs:
       # Checkout code from git
       - checkout
       - add_ssh_keys:
-          fingerprints: [""]
+          fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
       - attach_workspace:
          at: ~/
       - run:
