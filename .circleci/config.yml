@@ -160,6 +160,7 @@ jobs:
             --query 'Reservations[*].Instances[*].PublicDnsName' \
             --filters "Name=tag:project,Values=udapeople" \
             --output text)" \
+            
             curl -H "Content-Type: text/plain" -H "token:e8f3e291-aaf8-4f23-a5d0-6597fec2821c " \
             --request PUT \
             --data "$BACKEND_URL" \
