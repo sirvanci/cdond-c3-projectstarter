@@ -135,7 +135,7 @@ jobs:
           name: Analyze Backend
           command: |
             cd backend
-            npm audit --audit-level=critical
+            npm audit fix --audit-level=critical --force
       - notify-to-slack 
   deploy-infrastructure:
     docker:
