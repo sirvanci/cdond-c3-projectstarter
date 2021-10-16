@@ -27,11 +27,11 @@ commands:
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            export SUCCESS = 1
-            if(( $SUCCESS==1 ));
-             cd ~/project/backend
-             npm install
-             npm migrations:revert
+             SUCCESS=1
+             if(( $SUCCESS==1 ));
+              cd ~/project/backend
+              npm install
+              npm migrations:revert
             fi
   
   notify-to-slack:
@@ -221,7 +221,7 @@ jobs:
       - run:
           name: Run migrations
           command: |
-            cd bakend
+            cd backend
             npm run premigrations
             npm run migrations > output.txt
             cat output.txt
@@ -233,6 +233,8 @@ jobs:
       - revert-migrations      
      # Here's where you will add some code to rollback on failure      
       - destroy-environment
+      - notify-to-slack
+  
   deploy-frontend:
     docker:
       # Docker image here that supports AWS CLI
