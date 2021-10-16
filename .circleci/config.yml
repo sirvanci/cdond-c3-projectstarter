@@ -3,6 +3,10 @@ version: 2.1
 orbs:
   slack: circleci/slack@4.4.4
 
+parameters:
+  workflow-id:
+    type: string
+    default: "${CIRCLE_WORKFLOW_ID:0:7}"
 commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -39,16 +43,13 @@ commands:
     description: when step is broken, notify our slack pipeline alert channel      
     steps:  
     - slack/notify:
-          event: fail
-          template: basic_fail_1        
+          event: always
 jobs:
   build-frontend:
     docker:
       - image: cimg/node:16.11.1
     steps:
       - checkout
-      - restore_cache:
-          keys: [frontend-build] 
       - run:
           name: Build front-end
           command: |
@@ -65,8 +66,6 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [backend-build]
       - run:
           name: Back-end build
           command: |
@@ -90,7 +89,7 @@ jobs:
           name: Unit Test Frontend
           command: |
             cd frontend
-            ls
+            NODE_OPTIONS=--max_old_space_size=4096
             npm run test
       - notify-to-slack           
   test-backend:
@@ -147,11 +146,10 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              #--tags project=your-tag \
-              # --stack-name "your back-end stack name with workflow id" \
-              # --parameter-overrides ID="your workflow id"  
-              exit 1
-      - notify-to-slack        
+              --tags project=udapeople \
+              --stack-name "udapeople-backend-<< pipeline.parameters.workflow-id >>" \
+              --parameter-overrides ID="<< pipeline.parameters.workflow-id >>"  
+                     
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -321,22 +319,40 @@ workflows:
     jobs:
       - build-frontend:
          context: slack-secrets
+         filters:
+            branches:
+              only: [master] 
       - build-backend:
          context: slack-secrets
+         filters:
+            branches:
+              only: [master]
       - test-frontend:
           requires: [build-frontend]
           context: slack-secrets
+          filters:
+            branches:
+              only: [master]
       - test-backend:
           requires: [build-backend]
           context: slack-secrets
+          filters:
+            branches:
+              only: [master]
       - scan-backend:
           requires: [build-backend]
           context: slack-secrets
+          filters:
+            branches:
+              only: [master]
       - scan-frontend:
           requires: [build-frontend]
           context: slack-secrets
+          filters:
+            branches:
+              only: [master]
       - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          #requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
               only: [test-feature-branch]
