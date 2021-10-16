@@ -145,6 +145,9 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
+      - run: 
+          name: install jq
+          command: yum install jq -y
       - run:
           name: Ensure back-end infrastructure exists
           command: |
@@ -164,7 +167,7 @@ jobs:
             curl -H "Content-Type: text/plain" -H "token:e8f3e291-aaf8-4f23-a5d0-6597fec2821c " \
             --request PUT \
             --data "$BACKEND_URL" \
-            https://api.memstash.io/values/backend-url
+            https://api.memstash.io/values/backend-url-${"${CIRCLE_WORKFLOW_ID:0:7}"}
                     
                      
       - run:
@@ -179,8 +182,8 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            # Your code here
-            exit 1
+            curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" \
+            --request GET https://api.memstash.io/values/backend-url-${CIRCLE_WORKFLOW_ID:0:7}.circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
