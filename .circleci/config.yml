@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   slack: circleci/slack@4.4.4
+  aws-cli: circleci/aws-cli@2.0.3
 
 parameters:
   workflow-id:
@@ -26,7 +27,7 @@ commands:
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = 1
+            export SUCCESS = 1
             if(( $SUCCESS==1 ));
              cd ~/project/backend
              npm install
@@ -193,6 +194,7 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
+      - aws-cli/setup
       - add_ssh_keys:
           fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
       - attach_workspace:
@@ -216,11 +218,14 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
+      - aws-cli/setup
       - run:
           name: Run migrations
           command: |
+            cd bakend
             npm run premigrations
-            npm run migrations
+            npm run migrations > output.txt
+            cat output.txt
       - run:
           name: Send migration results to memstash
           command: |
