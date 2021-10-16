@@ -149,7 +149,8 @@ jobs:
               --template-file .circleci/files/backend.yml \
               --tags project=udapeople \
               --stack-name "udapeople-backend-<< pipeline.parameters.workflow-id >>" \
-              --parameter-overrides ID="<< pipeline.parameters.workflow-id >>" 
+              --parameter-overrides ID="<< pipeline.parameters.workflow-id >>" \
+              --region=eu-central-1   
               exit 1
       - notify-to-slack        
       - run:
