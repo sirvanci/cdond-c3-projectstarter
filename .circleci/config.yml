@@ -152,17 +152,29 @@ jobs:
               --template-file .circleci/files/backend.yml \
               --tags project=udapeople \
               --stack-name "udapeople-backend-<< pipeline.parameters.workflow-id >>" \
-              --parameter-overrides ID="<< pipeline.parameters.workflow-id >>"  
+              --parameter-overrides ID="<< pipeline.parameters.workflow-id >>" 
+      - run:
+          name: MemCache back-end url
+          command: |
+            export BACKEND_URL="$(aws ec2 describe-instances \
+            --query 'Reservations[*].Instances[*].PublicDnsName' \
+            --filters "Name=tag:project,Values=udapeople" \
+            --output text)" \
+            curl -H "Content-Type: text/plain" -H "token:e8f3e291-aaf8-4f23-a5d0-6597fec2821c " \
+            --request PUT \
+            --data "$BACKEND_URL" \
+            https://api.memstash.io/values/backend-url
+                    
                      
       - run:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              #--tags project=your-tag \
-              # --stack-name "your front-end stack name with workflow id" \
-              # --parameter-overrides ID="your workflow id"  
-              exit 1
+              --tags project=udapeople \
+              --stack-name "udapeople-frontend-<< pipeline.parameters.workflow-id >>" \
+              --parameter-overrides ID="<< pipeline.parameters.workflow-id >>" 
+              
       - run:
           name: Add back-end ip to ansible inventory
           command: |
