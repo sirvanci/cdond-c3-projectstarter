@@ -9,9 +9,7 @@ parameters:
     default: "${CIRCLE_WORKFLOW_ID:0:7}"
 commands:
   destroy-environment:
-    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
-    parameters:
-      # Add parameter here   
+    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.  
     steps:
       - run:
           name: Destroy environments
@@ -21,22 +19,18 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-frontend-<< pipeline.parameters.workflow-id >>
 
   revert-migrations:
-    description: Revert the last migration if successfully run in the current workflow.
-    parameters:
-      # Add parameter here     
+    description: Revert the last migration if successfully run in the current workflow.   
     steps:
       - run:
           name: Revert migrations
-          # Add when this will run
+          when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
             SUCCESS = 1
-            if(( $SUCCESS==1 )); 
-            then
-            #  cd ~/project/backend
-            #  npm install
-            #  Add revert code here. You can find this in the Getting Started section.
-              exit 1
+            if(( $SUCCESS==1 ));
+             cd ~/project/backend
+             npm install
+             npm migrations:revert
             fi
   
   notify-to-slack:
@@ -203,10 +197,12 @@ jobs:
           fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
       - attach_workspace:
          at: ~/
+          
       - run:
           name: Install dependencies
           command: |
             apk add --update ansible
+            apk add curl
       - run:
           name: Configure server
           command: |
@@ -229,6 +225,7 @@ jobs:
           command: |
             # Your code here
             exit 1
+      - revert-migrations      
      # Here's where you will add some code to rollback on failure      
       - destroy-environment
   deploy-frontend:
