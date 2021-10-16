@@ -44,6 +44,21 @@ commands:
     steps:  
     - slack/notify:
           event: always
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "plain_text",
+                      "text": "*This is a text notification*",
+                      "emoji": true
+                    }
+                  ]
+                }
+              ]
+            }
 jobs:
   build-frontend:
     docker:
