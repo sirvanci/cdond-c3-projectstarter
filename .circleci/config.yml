@@ -167,7 +167,7 @@ jobs:
             curl -H "Content-Type: text/plain" -H "token:e8f3e291-aaf8-4f23-a5d0-6597fec2821c " \
             --request PUT \
             --data "$BACKEND_URL" \
-            https://api.memstash.io/values/backend-url"}
+            https://api.memstash.io/values/backend-url
                     
                      
       - run:
@@ -183,7 +183,7 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" \
-            --request GET https://api.memstash.io/values/backend-url >>.circleci/ansible/inventory.txt
+            --request GET https://api.memstash.io/values/backend-url >> .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
