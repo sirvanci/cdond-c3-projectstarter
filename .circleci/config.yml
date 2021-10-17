@@ -190,9 +190,7 @@ jobs:
   configure-infrastructure:
     docker:
       - image: python:3.7-alpine3.11
-      # Docker image here that supports Ansible
     steps:
-      # Checkout code from git
       - checkout
       - add_ssh_keys:
           fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
@@ -219,6 +217,18 @@ jobs:
       - checkout
       - aws-cli/setup
       - run:
+          name: Create env file
+          command: |
+            echo NODE_ENV=production >> backend/.env
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> backend/.env
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> backend/.env
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> backend/.env
+            echo TYPEORM_HOST=$TYPEORM_HOST >> backend/.env
+            echo TYPEORM_PORT=$TYPEORM_PORT >> backend/.env
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/.env
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/.env
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/.env            
+      - run:
           name: Run migrations
           command: |
             cd backend
@@ -231,7 +241,6 @@ jobs:
             # Your code here
             exit 1
       - revert-migrations      
-     # Here's where you will add some code to rollback on failure      
       - destroy-environment
       - notify-to-slack
   
