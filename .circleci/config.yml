@@ -26,15 +26,13 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-             SUCCESS=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" \
-                --request GET \
-                https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID})
-             if(( $SUCCESS==1 ));
-              cd ~/project/backend
+             SUCCESS=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" --request GET https://api.memstash.io/values/migration_7ecfbeb)
+             if [[ $SUCCESS==1 ]]
+             then
+              cd backend
               npm install
-              npm migrations:revert
-             fi
-  
+              npm run migrations:revert
+             fi  
   notify-to-slack:
     description: when step is broken, notify our slack pipeline alert channel      
     steps:  
@@ -243,20 +241,19 @@ jobs:
           command: |
             export MG_NOT_FOUND=$(cat backend/output.txt | grep -c "No migrations are pending")
             export MG_EXE=$(cat backend/output.txt | grep -c "has been executed successfully")
-            if [ $MG_NOT_FOUND>0 ] || [ $MG_EXE > 0 ] then
+            if [ $MG_NOT_FOUND > 0 ] || [ $MG_EXE > 0 ] 
+            then
               curl -H "Content-Type: text/plain" -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" \
-                --request PUT \
-                --data "1" \
-                https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
-              exit 0
-              
+              --request PUT \
+              --data "1" \
+              https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
             else
              curl -H "Content-Type: text/plain" -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" \
-                --request PUT \
-                --data "0" \
-                https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
-              exit 1
-            fi 
+              --request PUT \
+              --data "0" \
+              https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
+             exit 1
+            fi
       - revert-migrations      
       - destroy-environment
       - notify-to-slack
