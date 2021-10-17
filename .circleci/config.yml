@@ -264,9 +264,11 @@ jobs:
     steps:
       - checkout
       - aws-cli/setup
-      - restore_cache:
-          keys: 
-          - frontend-build-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Install dependencies
+          command: |
+            cd frontend
+            npm i
       - run:
           name: Get backend url
           command: |
@@ -281,11 +283,11 @@ jobs:
           npm run build     
       - run:
           name: Deploy frontend objects
-          command: aws s3 cp --recursive frontend/dist "s3://udapeople-<< pipeline.parameters.workflow-id >>"
+          command: aws s3 cp --recursive frontend/dist "s3://udapeople-b7b0755"
       - run:
           name: remove frontend from S3
           when: on_fail
-          command: aws s3 rm --recursive frontend/dist "s3://udapeople-<< pipeline.parameters.workflow-id >>"
+          command: aws s3 rm --recursive frontend/dist "s3://udapeople-b7b0755"
 
   deploy-backend:
     docker:
