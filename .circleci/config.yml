@@ -282,11 +282,8 @@ jobs:
           npm run build     
       - run:
           name: Deploy frontend objects
-          command: aws s3 cp --recursive frontend/dist "s3://udapeople-b7b0755"
-      - run:
-          name: remove frontend from S3
-          when: on_fail
-          command: aws s3 rm --recursive frontend/dist "s3://udapeople-b7b0755"
+          command: aws s3 cp --recursive frontend/dist "s3://udapeople-<< pipeline.parameters.workflow-id >> "
+      - destroy-environment
 
   deploy-backend:
     docker:
@@ -297,7 +294,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
       - attach_workspace:
-         at: ~/          
+         at: ~/        
       - run:
           name: Install dependencies
           command: |
@@ -426,13 +423,10 @@ workflows:
           requires: [configure-infrastructure]
           context: slack-secrets 
       - deploy-frontend:
-          #requires: [run-migrations]
+          requires: [run-migrations]
           context: slack-secrets 
-          filters:
-             branches:
-               only: [test-deploy-branch]
       - deploy-backend:
-          #requires: [run-migrations]
+          requires: [run-migrations]
           context: slack-secrets 
       - smoke-test:
           requires: [deploy-backend, deploy-frontend]
