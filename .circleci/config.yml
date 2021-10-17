@@ -283,7 +283,11 @@ jobs:
       - run:
           name: Deploy frontend objects
           command: aws s3 cp --recursive frontend/dist "s3://udapeople-<< pipeline.parameters.workflow-id >> "
-      - destroy-environment
+      - run: 
+          name: Delete s3 bucket files
+          when: on_fail
+          command: aws s3 rm --recursive  s3://udapeople-<< pipeline.parameters.workflow-id >>
+
 
   deploy-backend:
     docker:
@@ -309,6 +313,7 @@ jobs:
             mv backend-dist.tar .circleci/ansible/roles/deploy/files
             ls .circleci/ansible/roles/deploy/files
             ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
+      - destroy-environment      
       # Here's where you will add some code to rollback on failure  
 
   smoke-test:
