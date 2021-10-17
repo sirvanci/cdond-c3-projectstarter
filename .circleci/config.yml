@@ -26,13 +26,14 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-             SUCCESS=1
+             SUCCESS=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" \
+                --request GET \
+                https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID})
              if(( $SUCCESS==1 ));
               cd ~/project/backend
               npm install
               npm migrations:revert
-            fi
+             fi
   
   notify-to-slack:
     description: when step is broken, notify our slack pipeline alert channel      
@@ -233,15 +234,29 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            cat .env
             npm install
             npm run migrations > output.txt
             cat output.txt
+               
       - run:
           name: Send migration results to memstash
           command: |
-            # Your code here
-            exit 1
+            export MG_NOT_FOUND=$(cat backend/output.txt | grep -c "No migrations are pending")
+            export MG_EXE=$(cat backend/output.txt | grep -c "has been executed successfully")
+            if [ $MG_NOT_FOUND>0 ] || [ $MG_EXE > 0 ] then
+              curl -H "Content-Type: text/plain" -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" \
+                --request PUT \
+                --data "1" \
+                https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
+              exit 0
+              
+            else
+             curl -H "Content-Type: text/plain" -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" \
+                --request PUT \
+                --data "0" \
+                https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
+              exit 1
+            fi 
       - revert-migrations      
       - destroy-environment
       - notify-to-slack
