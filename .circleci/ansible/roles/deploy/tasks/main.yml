@@ -1,0 +1,12 @@
+- name: Copy backend files
+  become: true
+  copy:
+    src:  backend-dist.tar
+    dest: backend-dist.tar
+
+- name: Start PM2
+  become: true
+  shell: |
+    tar -xf backend-dist.tar
+    rm backend-dist.tar
+    pm2 start backend/dist/main.js

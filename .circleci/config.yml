@@ -194,8 +194,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
       - attach_workspace:
-         at: ~/
-          
+         at: ~/    
       - run:
           name: Install dependencies
           command: |
@@ -294,18 +293,23 @@ jobs:
       # Docker image here that supports Ansible
       - image: python:3.7-alpine3.11
     steps:
-      # Checkout code from git
       - checkout
-      # Add ssh keys with fingerprint
-      # attach workspace
+      - add_ssh_keys:
+          fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
+      - attach_workspace:
+         at: ~/          
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            apk add --update ansible
+            apk add curl
+            apk add jq
       - run:
           name: Deploy backend
           command: |
-            # your code here
+            tar -cvf backend-dist.tar backend
+            mv backend-dist.tar .circleci/ansible/roles/deploy/files
+            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
       # Here's where you will add some code to rollback on failure  
 
   smoke-test:
