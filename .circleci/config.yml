@@ -103,8 +103,7 @@ jobs:
           name: Unit Test Frontend
           command: |
             cd frontend
-            NODE_OPTIONS=--max_old_space_size=4096
-            npm run test
+            NODE_OPTIONS=--max_old_space_size=4096 npm run test
       - notify-to-slack           
   test-backend:
     docker:
@@ -315,6 +314,9 @@ jobs:
     steps:
       - checkout
       - create-env
+      - restore_cache:
+         keys: 
+          - backend-build-{{ .Environment.CIRCLE_SHA1 }}
       - add_ssh_keys:
           fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
       - attach_workspace:
@@ -425,7 +427,7 @@ workflows:
           requires: [build-frontend]
           context: slack-secrets
       - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          #requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
               only: [test-feature-branch]
