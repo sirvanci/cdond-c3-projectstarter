@@ -314,13 +314,13 @@ jobs:
     steps:
       - checkout
       - create-env
-      - restore_cache:
-         keys: 
-          - backend-build-{{ .Environment.CIRCLE_SHA1 }}
       - add_ssh_keys:
           fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
       - attach_workspace:
-         at: ~/        
+         at: ~/ 
+      - restore_cache:
+         keys: 
+          - backend-build-{{ .Environment.CIRCLE_SHA1 }}              
       - run:
           name: Install dependencies
           command: |
@@ -330,6 +330,7 @@ jobs:
       - run:
           name: Deploy backend
           command: |
+            ls backend
             tar -cvf backend-dist.tar backend
             mkdir .circleci/ansible/roles/deploy/files
             mv backend-dist.tar .circleci/ansible/roles/deploy/files
