@@ -260,27 +260,33 @@ jobs:
   
   deploy-frontend:
     docker:
-      # Docker image here that supports AWS CLI
-      - image: amazon/aws-cli
+      - image: circleci/node:16.11.1
     steps:
-      # Checkout code from git
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            # your code here
+      - aws-cli/setup
+      - restore_cache:
+          keys: 
+          - frontend-build-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Get backend url
           command: |
             # your code here
+            export BACKEND_IP=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" --request GET https://api.memstash.io/values/backend-url)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
+      - run: 
+         name: Backed with url 
+         command: |
+          cd frontend
+          npm run build     
       - run:
           name: Deploy frontend objects
-          command: |
-            # your code here
-      # Here's where you will add some code to rollback on failure      
-                    
+          command: aws s3 cp --recursive frontend/dist "s3://udapeople-<< pipeline.parameters.workflow-id >>"
+      - run:
+          name: remove frontend from S3
+          when: on_fail
+          command: aws s3 rm --recursive frontend/dist "s3://udapeople-<< pipeline.parameters.workflow-id >>"
+
   deploy-backend:
     docker:
       # Docker image here that supports Ansible
@@ -416,6 +422,9 @@ workflows:
       - deploy-frontend:
           requires: [run-migrations]
           context: slack-secrets 
+          filters:
+             branches:
+               only: [test-deploy-branch]
       - deploy-backend:
           requires: [run-migrations]
           context: slack-secrets 
