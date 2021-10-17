@@ -3,10 +3,11 @@
   copy:
     src:  backend-dist.tar
     dest: backend-dist.tar
-
+- name: Unarchive files  
+  unarchive:
+    src: backend-dist.tar
+    dest: /home/ubuntu
 - name: Start PM2
   become: true
   shell: |
-    tar -xf backend-dist.tar
-    rm backend-dist.tar
     pm2 start backend/dist/main.js

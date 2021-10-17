@@ -282,7 +282,7 @@ jobs:
           npm run build     
       - run:
           name: Deploy frontend objects
-          command: aws s3 cp --recursive frontend/dist "s3://udapeople-<< pipeline.parameters.workflow-id >> "
+          command: aws s3 cp --recursive frontend/dist s3://udapeople-<< pipeline.parameters.workflow-id >>
       - run: 
           name: Delete s3 bucket files
           when: on_fail
