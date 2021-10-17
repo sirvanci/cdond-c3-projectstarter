@@ -425,7 +425,7 @@ workflows:
           requires: [build-frontend]
           context: slack-secrets
       - deploy-infrastructure:
-          #Requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
               only: [test-feature-branch]
