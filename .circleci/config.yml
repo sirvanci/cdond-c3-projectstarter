@@ -341,7 +341,6 @@ jobs:
       - image: alpine:latest
     steps:
       - checkout
-      - aws-cli/setup
       - run:
           name: Install dependencies
           command: |
@@ -357,9 +356,9 @@ jobs:
             echo $BACKEND_URL
             if curl -s http://$BACKEND_URL:3030/api/status
             then 
-              exit 0
+              return 0
             else
-              exit 1
+              return 1
             fi  
       - run:
           name: Frontend smoke test.
@@ -371,7 +370,6 @@ jobs:
             else
               return 0
             fi
-      - destroy-environment
 
   cloudfront-update:
       # Docker image here that supports AWS CLI
