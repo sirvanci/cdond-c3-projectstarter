@@ -151,12 +151,12 @@ jobs:
       - notify-to-slack 
   deploy-infrastructure:
     docker:
-      - image: amazon/aws-cli
-    restore_cache:
-        keys: 
-        - backend-build-{{ .Environment.CIRCLE_SHA1 }}  
+      - image: amazon/aws-cli 
     steps:
       - checkout
+      - restore_cache:
+          keys: 
+            - backend-build-{{ .Environment.CIRCLE_SHA1 }}  
       - run: 
           name: install jq && tar && gzip
           command: yum install jq tar gzip -y
