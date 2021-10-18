@@ -324,13 +324,14 @@ jobs:
             apk add jq
       - restore_cache:
          keys: 
-          - backend-build-{{ .Environment.CIRCLE_SHA1 }}        
+          - backend-build-{{ .Environment.CIRCLE_SHA1 }}            
       - run:
           name: Deploy backend
           command: |
             pwd
             ls .. 
-            ls /home/circleci/project/backend/dist
+            cp /home/circleci/project/backend/dist backend/dist
+            cp /home/circleci/project/backend/node_modules backend/node_modules
             ls backend
             tar -cvf backend-dist.tar backend
             mkdir .circleci/ansible/roles/deploy/files
