@@ -288,11 +288,11 @@ jobs:
           name: Delete s3 bucket files
           when: on_fail
           command: aws s3 rm --recursive  s3://udapeople-<< pipeline.parameters.workflow-id >>
+      - destroy-environment    
 
 
   deploy-backend:
     docker:
-      # Docker image here that supports Ansible
       - image: python:3.7-alpine3.11
     steps:
       - checkout
@@ -312,11 +312,13 @@ jobs:
       - run:
           name: Deploy backend
           command: |
+            # create cache directory, restore-cache does not create
             mkdir backend/dist
             mkdir backend/node_modules
+            # copy cache files to backend
             cp -r /home/circleci/project/backend/dist/* backend/dist
             cp -r /home/circleci/project/backend/node_modules/* backend/node_modules
-            ls backend
+            # create dist env
             echo NODE_ENV=production >> backend/dist/.env
             echo TYPEORM_ENTITIES=./modules/domain/**/*.entity.js >> backend/dist/.env
             echo TYPEORM_CONNECTION=postgres >> backend/dist/.env
@@ -325,19 +327,21 @@ jobs:
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/dist/.env
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/dist/.env
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/dist/.env 
-            ls backend
+            # zip for ansible file transfer
             tar -cf backend-dist.tar backend
+            # backend move to ansible files
             mkdir .circleci/ansible/roles/deploy/files
             mv backend-dist.tar .circleci/ansible/roles/deploy/files
+            # Run ansible that copy backend project to server then pm2 start
             ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
       - destroy-environment      
-      # Here's where you will add some code to rollback on failure  
 
   smoke-test:
     docker:
       - image: alpine:latest
     steps:
       - checkout
+      - aws-cli/setup
       - run:
           name: Install dependencies
           command: |
@@ -345,7 +349,12 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            BACKEND_URL=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" --request GET https://api.memstash.io/values/backend-url)
+           export BACKEND_URL=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" --request GET https://api.memstash.io/values/backend-url)
+            
+      - run:
+          name: Backend smoke test.
+          command: |
+            echo $BACKEND_URL
             if curl -s http://$BACKEND_URL:3030/api/status
             then 
               exit 0
@@ -353,14 +362,16 @@ jobs:
               exit 1
             fi  
       - run:
-          name: Backend smoke test.
-          command: |
-            # your code here
-      - run:
           name: Frontend smoke test.
           command: |
-            # your code here
-      # Here's where you will add some code to rollback on failure  
+            URL=http://udapeople-<< pipeline.parameters.workflow-id >>.s3-website-us-east-1.amazonaws.com
+            if curl -s ${URL} | grep "Welcome"
+            then
+              return 1
+            else
+              return 0
+            fi
+      - destroy-environment
 
   cloudfront-update:
       # Docker image here that supports AWS CLI
