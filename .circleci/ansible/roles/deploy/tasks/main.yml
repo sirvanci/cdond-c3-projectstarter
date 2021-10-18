@@ -10,4 +10,5 @@
 - name: Start PM2
   become: true
   shell: |
-    NODE_ENV=production pm2 start backend/dist/main.js
+    cd backend/dist/
+    NODE_ENV=production pm2 start main.js

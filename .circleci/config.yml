@@ -348,24 +348,24 @@ jobs:
       - run:
           name: Get backend url
           command: |
-           export BACKEND_URL=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" --request GET https://api.memstash.io/values/backend-url)
+           #export BACKEND_URL=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" --request GET https://api.memstash.io/values/backend-url)
             
       - run:
           name: Backend smoke test.
           command: |
             export BACKEND_URL=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" --request GET https://api.memstash.io/values/backend-url)
             echo $BACKEND_URL
-            if curl -s http://$BACKEND_URL:3030/api/status
+            if [ curl http://$BACKEND_URL:3030/api/status ]
             then 
-              return 0
+              exit 0
             else
-              return 1
+              exit 1
             fi  
       - run:
           name: Frontend smoke test.
           command: |
             URL=http://udapeople-<< pipeline.parameters.workflow-id >>.s3-website-us-east-1.amazonaws.com
-            if curl -s ${URL} | grep "Welcome"
+            if [curl -s ${URL} | grep "Welcome"]
             then
               return 1
             else
