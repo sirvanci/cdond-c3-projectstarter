@@ -314,8 +314,11 @@ jobs:
           command: |
             pwd
             ls .. 
+            mkdir backend/dist
+            mkdir backend/node_modules
             cp -r /home/circleci/project/backend/dist/* backend/
             cp -r /home/circleci/project/backend/node_modules/* backend/
+            ls backend
             echo NODE_ENV=production >> backend/dist/.env
             echo TYPEORM_ENTITIES=./modules/domain/**/*.entity.js >> backend/dist/.env
             echo TYPEORM_CONNECTION=postgres >> backend/dist/.env
