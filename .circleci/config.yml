@@ -152,6 +152,9 @@ jobs:
   deploy-infrastructure:
     docker:
       - image: amazon/aws-cli
+    restore_cache:
+        keys: 
+        - backend-build-{{ .Environment.CIRCLE_SHA1 }}  
     steps:
       - checkout
       - run: 
@@ -197,6 +200,8 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
+            - project/backend/node_modues
+            - project/backend/dist
       - destroy-environment
       - notify-to-slack      
       # Here's where you will add some code to rollback on failure      
@@ -317,10 +322,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
       - attach_workspace:
-         at: ~/ 
-      - restore_cache:
-         keys: 
-          - backend-build-{{ .Environment.CIRCLE_SHA1 }}              
+         at: ~/      
       - run:
           name: Install dependencies
           command: |
