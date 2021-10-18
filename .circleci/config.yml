@@ -154,12 +154,12 @@ jobs:
       - image: amazon/aws-cli 
     steps:
       - checkout
-      - restore_cache:
-          keys: 
-            - backend-build-{{ .Environment.CIRCLE_SHA1 }}  
       - run: 
           name: install jq && tar && gzip
           command: yum install jq tar gzip -y
+      - restore_cache:
+          keys: 
+            - backend-build-{{ .Environment.CIRCLE_SHA1 }}      
       - run:
           name: Ensure back-end infrastructure exists
           command: |
