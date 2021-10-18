@@ -312,12 +312,10 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            pwd
-            ls .. 
             mkdir backend/dist
             mkdir backend/node_modules
-            cp -r /home/circleci/project/backend/dist/* backend/
-            cp -r /home/circleci/project/backend/node_modules/* backend/
+            cp -r /home/circleci/project/backend/dist/* backend/dist
+            cp -r /home/circleci/project/backend/node_modules/* backend/node_modules
             ls backend
             echo NODE_ENV=production >> backend/dist/.env
             echo TYPEORM_ENTITIES=./modules/domain/**/*.entity.js >> backend/dist/.env
@@ -328,7 +326,7 @@ jobs:
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/dist/.env
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/dist/.env 
             ls backend
-            tar -cvf backend-dist.tar backend
+            tar -cf backend-dist.tar backend
             mkdir .circleci/ansible/roles/deploy/files
             mv backend-dist.tar .circleci/ansible/roles/deploy/files
             ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
