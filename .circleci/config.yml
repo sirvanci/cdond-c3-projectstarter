@@ -318,7 +318,6 @@ jobs:
       - image: python:3.7-alpine3.11
     steps:
       - checkout
-      - create-env
       - add_ssh_keys:
           fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
       - attach_workspace:
@@ -332,6 +331,7 @@ jobs:
       - run:
           name: Deploy backend
           command: |
+            ls project
             ls backend
             tar -cvf backend-dist.tar backend
             mkdir .circleci/ansible/roles/deploy/files
@@ -343,19 +343,23 @@ jobs:
 
   smoke-test:
     docker:
-      # Lightweight Docker image 
       - image: alpine:latest
     steps:
-      # Checkout code from git
       - checkout
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            apk add curl
       - run:
           name: Get backend url
           command: |
-            # your code here
+            BACKEND_URL=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" --request GET https://api.memstash.io/values/backend-url)
+            if curl -s http://$BACKEND_URL:3030/api/status
+            then 
+              exit 0
+            else
+              exit 1
+            fi  
       - run:
           name: Backend smoke test.
           command: |
