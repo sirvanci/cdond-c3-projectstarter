@@ -9,22 +9,6 @@ parameters:
     type: string
     default: "${CIRCLE_WORKFLOW_ID:0:7}"
 commands:
-  create-env:
-    description: Create backend env file 
-    steps:
-      - run:
-          name: Create env file
-          command: |
-            echo NODE_ENV=production >> backend/.env
-            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> backend/.env
-            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> backend/.env
-            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> backend/.env
-            echo TYPEORM_CONNECTION=postgres >> backend/.env
-            echo TYPEORM_HOST=$TYPEORM_HOST >> backend/.env
-            echo TYPEORM_PORT=$TYPEORM_PORT >> backend/.env
-            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/.env
-            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/.env
-            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/.env 
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.  
     steps:
@@ -330,13 +314,20 @@ jobs:
           command: |
             pwd
             ls .. 
-            cp /home/circleci/project/backend/dist backend/dist
-            cp /home/circleci/project/backend/node_modules backend/node_modules
+            cp -r /home/circleci/project/backend/dist/* backend/
+            cp -r /home/circleci/project/backend/node_modules/* backend/
+            echo NODE_ENV=production >> backend/dist/.env
+            echo TYPEORM_ENTITIES=./modules/domain/**/*.entity.js >> backend/dist/.env
+            echo TYPEORM_CONNECTION=postgres >> backend/dist/.env
+            echo TYPEORM_HOST=$TYPEORM_HOST >> backend/dist/.env
+            echo TYPEORM_PORT=$TYPEORM_PORT >> backend/dist/.env
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/dist/.env
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/dist/.env
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/dist/.env 
             ls backend
             tar -cvf backend-dist.tar backend
             mkdir .circleci/ansible/roles/deploy/files
             mv backend-dist.tar .circleci/ansible/roles/deploy/files
-            ls .circleci/ansible/roles/deploy/files
             ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
       - destroy-environment      
       # Here's where you will add some code to rollback on failure  
