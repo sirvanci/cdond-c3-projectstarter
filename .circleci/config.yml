@@ -155,10 +155,7 @@ jobs:
       - checkout
       - run: 
           name: install jq && tar && gzip
-          command: yum install jq tar gzip -y
-      - restore_cache:
-          keys: 
-            - backend-build-{{ .Environment.CIRCLE_SHA1 }}      
+          command: yum install jq tar gzip -y    
       - run:
           name: Ensure back-end infrastructure exists
           command: |
@@ -199,8 +196,6 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-            - project/backend/node_modues
-            - project/backend/dist
       - destroy-environment
       - notify-to-slack      
       # Here's where you will add some code to rollback on failure      
@@ -327,6 +322,9 @@ jobs:
             apk add --update ansible
             apk add curl
             apk add jq
+      - restore_cache:
+         keys: 
+          - backend-build-{{ .Environment.CIRCLE_SHA1 }}        
       - run:
           name: Deploy backend
           command: |
