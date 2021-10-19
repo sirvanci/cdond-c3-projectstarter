@@ -41,7 +41,7 @@ commands:
           name: Delete S3 files  
           when: on_fail
           command: |
-          aws s3 rm --recursive  s3://udapeople-<< pipeline.parameters.workflow-id >>      
+            aws s3 rm --recursive  s3://udapeople-<< pipeline.parameters.workflow-id >>      
   
   notify-to-slack:
     description: when step is broken, notify our slack pipeline alert channel      
@@ -363,7 +363,7 @@ jobs:
             echo http://$BACKEND_URL:3030/api/status
             if curl -s http://$BACKEND_URL:3030/api/status
             then 
-              exit 0
+              exit 1
             else
               exit 1
             fi  
@@ -374,9 +374,9 @@ jobs:
             URL=http://udapeople-<< pipeline.parameters.workflow-id >>.s3-website.eu-central-1.amazonaws.com
             if curl -s ${URL} | grep "Welcome"
             then
-              echo 0
+              exit 1
             else
-              echo 1
+              exit 1
       - revert-migrations
       - cleanup-s3
       - destroy-environment
