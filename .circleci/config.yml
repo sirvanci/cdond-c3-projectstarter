@@ -351,11 +351,7 @@ jobs:
           name: Install dependencies
           command: |
             apk add curl
-      - run:
-          name: Get backend url
-          command: |
-           #export BACKEND_URL=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" --request GET https://api.memstash.io/values/backend-url)
-            
+            apk add --update npm        
       - run:
           name: Backend smoke test.
           command: |
@@ -363,14 +359,13 @@ jobs:
             echo http://$BACKEND_URL:3030/api/status
             if curl -s http://$BACKEND_URL:3030/api/status
             then 
-              exit 1
+              exit 0
             else
               exit 1
             fi  
       - run:
           name: Frontend smoke test.
           command: |
-            # http://udapeople-5c733db.s3-website.eu-central-1.amazonaws.com
             URL=http://udapeople-<< pipeline.parameters.workflow-id >>.s3-website.eu-central-1.amazonaws.com
             if curl -s ${URL} | grep "Welcome"
             then
