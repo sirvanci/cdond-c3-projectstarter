@@ -408,7 +408,7 @@ jobs:
           name: Update cloudfront distribution
           command: |
               # Deploy new one
-              aws cloudformation deploy \
+              aws cloudformation create \
               --template-file .circleci/files/cloudfront.yml \
               --stack-name "udapeople-cloudfront" \
               --parameter-overrides WorkflowID="<< pipeline.parameters.workflow-id >>" \
