@@ -383,6 +383,7 @@ jobs:
               exit 0
             else
               exit 1
+            fi  
       - revert-migrations
       - cleanup-s3
       - destroy-environment
