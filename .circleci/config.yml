@@ -8,6 +8,7 @@ parameters:
   workflow-id:
     type: string
     default: "${CIRCLE_WORKFLOW_ID:0:7}"
+
 commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.  
@@ -36,7 +37,7 @@ commands:
              echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/.env
              echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/.env
              echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/.env 
-             SUCCESS=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" --request GET https://api.memstash.io/values/migration_7ecfbeb)
+             SUCCESS=$(curl -H "token: $MEM_TOKEN" --request GET https://api.memstash.io/values/migration-${CIRCLE_WORKFLOW_ID})
              if [[ $SUCCESS==1 ]]
              then
               cd backend
@@ -176,7 +177,7 @@ jobs:
             --filters "Name=tag:project,Values=udapeople" \
             --output text)" \
             
-            curl -H "Content-Type: text/plain" -H "token:e8f3e291-aaf8-4f23-a5d0-6597fec2821c " \
+            curl -H "Content-Type: text/plain" -H "token: $MEM_TOKEN " \
             --request PUT \
             --data "$BACKEND_URL" \
             https://api.memstash.io/values/backend-url
@@ -194,7 +195,7 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" \
+            curl -H "token: $MEM_TOKEN" \
             --request GET https://api.memstash.io/values/backend-url >> .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
@@ -210,7 +211,7 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
+          fingerprints: ["${SSH_KEY}"]
       - attach_workspace:
          at: ~/    
       - run:
@@ -263,15 +264,15 @@ jobs:
             export MG_EXE=$(cat backend/output.txt | grep -c "has been executed successfully")
             if [ $MG_NOT_FOUND > 0 ] || [ $MG_EXE > 0 ] 
             then
-              curl -H "Content-Type: text/plain" -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" \
+              curl -H "Content-Type: text/plain" -H "token: $MEM_TOKEN" \
               --request PUT \
               --data "1" \
-              https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
+              https://api.memstash.io/values/migration-${CIRCLE_WORKFLOW_ID}
             else
              curl -H "Content-Type: text/plain" -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" \
               --request PUT \
               --data "0" \
-              https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
+              https://api.memstash.io/values/migration-${CIRCLE_WORKFLOW_ID}
              exit 1
             fi
       - revert-migrations      
@@ -293,7 +294,7 @@ jobs:
           name: Get backend url
           command: |
             # your code here
-            export BACKEND_IP=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" --request GET https://api.memstash.io/values/backend-url)
+            export BACKEND_IP=$(curl -H "token: $MEM_TOKEN" --request GET https://api.memstash.io/values/backend-url)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
       - run: 
@@ -365,7 +366,7 @@ jobs:
       - run:
           name: Backend smoke test.
           command: |
-            export BACKEND_URL=$(curl -H "token: e8f3e291-aaf8-4f23-a5d0-6597fec2821c" --request GET https://api.memstash.io/values/backend-url)
+            export BACKEND_URL=$(curl -H "token: $MEM_TOKEN" --request GET https://api.memstash.io/values/backend-url)
             echo http://$BACKEND_URL:3030/api/status
             if curl -s http://$BACKEND_URL:3030/api/status
             then 
@@ -379,7 +380,7 @@ jobs:
             URL=http://udapeople-<< pipeline.parameters.workflow-id >>.s3-website.eu-central-1.amazonaws.com
             if curl -s ${URL} | grep "Welcome"
             then
-              exit 1
+              exit 0
             else
               exit 1
       - revert-migrations
@@ -387,39 +388,46 @@ jobs:
       - destroy-environment
          
   cloudfront-update:
-      # Docker image here that supports AWS CLI
     docker:
       - image: amazon/aws-cli  
     steps:
-      # Checkout code from git
       - checkout
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            #run command
+              
       - run:
           name: Update cloudfront distribution
           command: |
-            # your code here
-      # Here's where you will add some code to rollback on failure  
+              # Deploy new one
+              aws cloudformation deploy \
+              --template-file .circleci/files/cloudfront.yml \
+              --stack-name "udapeople-cloudfront" \
+              --parameter-overrides WorkflowID="<< pipeline.parameters.workflow-id >>" \
+              --tags project=udapeople
+
 
   cleanup:
-      # Docker image here
     docker:
       - image: amazon/aws-cli  
     steps:
-      # Checkout code from 
       - checkout
       - run:
           name: Get old stack workflow id
           command: |
-            # your code here
-            export OldWorkflowID="the id here"
-            export STACKS=[] #put the list of stacks here
-      - run:
+              export OldWorkflowID=$(aws cloudformation list-exports \
+                --query "Exports[?Name==\`WorkflowID\`].Value" \
+                --no-paginate --output text)
+              echo $OldWorkflowID
+      - run: 
+          name: Update cloudfront-distribution
+          command: |
+             #run command
+      - run:    
           name: Remove old stacks and files
           command: |
-            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+            if [[ "" =~ "${OldWorkflowID}" ]]
             then
               # your code here
             fi
