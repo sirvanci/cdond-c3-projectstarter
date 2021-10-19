@@ -32,7 +32,17 @@ commands:
               cd backend
               npm install
               npm run migrations:revert
-             fi  
+             fi 
+  
+  cleanup-s3:
+     description: Delete S3 frontend build for preparing delete-stack
+     steps:
+      - run:
+          name: Delete S3 files  
+          when: on_fail
+          command: |
+          aws s3 rm --recursive  s3://udapeople-<< pipeline.parameters.workflow-id >>      
+  
   notify-to-slack:
     description: when step is broken, notify our slack pipeline alert channel      
     steps:  
@@ -284,10 +294,7 @@ jobs:
       - run:
           name: Deploy frontend objects
           command: aws s3 cp --recursive frontend/dist s3://udapeople-<< pipeline.parameters.workflow-id >>
-      - run: 
-          name: Delete s3 bucket files
-          when: on_fail
-          command: aws s3 rm --recursive  s3://udapeople-<< pipeline.parameters.workflow-id >>
+      - cleanup-s3
       - destroy-environment    
 
 
@@ -333,12 +340,11 @@ jobs:
             mkdir .circleci/ansible/roles/deploy/files
             mv backend-dist.tar .circleci/ansible/roles/deploy/files
             # Run ansible that copy backend project to server then pm2 start
-            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
-      - destroy-environment      
+            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml     
 
   smoke-test:
     docker:
-      - image: alpine:latest
+      - image: woahbase/alpine-awscli
     steps:
       - checkout
       - run:
@@ -364,14 +370,17 @@ jobs:
       - run:
           name: Frontend smoke test.
           command: |
-            URL=http://udapeople-<< pipeline.parameters.workflow-id >>.s3-website-us-east-1.amazonaws.com
+            # http://udapeople-5c733db.s3-website.eu-central-1.amazonaws.com
+            URL=http://udapeople-<< pipeline.parameters.workflow-id >>.s3-website.eu-central-1.amazonaws.com
             if curl -s ${URL} | grep "Welcome"
             then
-              return 1
+              echo 0
             else
-              return 1
-            fi
-
+              echo 1
+      - revert-migrations
+      - cleanup-s3
+      - destroy-environment
+         
   cloudfront-update:
       # Docker image here that supports AWS CLI
     docker:
