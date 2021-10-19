@@ -279,34 +279,7 @@ jobs:
       - destroy-environment
       - notify-to-slack
   
-  deploy-frontend:
-    docker:
-      - image: circleci/node:16.11.1
-    steps:
-      - checkout
-      - aws-cli/setup
-      - run:
-          name: Install dependencies
-          command: |
-            cd frontend
-            npm i
-      - run:
-          name: Get backend url
-          command: |
-            # your code here
-            export BACKEND_IP=$(curl -H "token: $MEM_TOKEN" --request GET https://api.memstash.io/values/backend-url)
-            export API_URL="http://${BACKEND_IP}:3030"
-            echo "${API_URL}"
-      - run: 
-         name: Backed with url 
-         command: |
-          cd frontend
-          npm run build     
-      - run:
-          name: Deploy frontend objects
-          command: aws s3 cp --recursive frontend/dist s3://udapeople-<< pipeline.parameters.workflow-id >>
-      - cleanup-s3
-      - destroy-environment    
+    
 
 
   deploy-backend:
@@ -351,7 +324,39 @@ jobs:
             mkdir .circleci/ansible/roles/deploy/files
             mv backend-dist.tar .circleci/ansible/roles/deploy/files
             # Run ansible that copy backend project to server then pm2 start
-            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml     
+            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml  
+      - revert-migrations
+      - destroy-environment
+  deploy-frontend:
+    docker:
+      - image: circleci/node:16.11.1
+    steps:
+      - checkout
+      - aws-cli/setup
+      - run:
+          name: Install dependencies
+          command: |
+            cd frontend
+            npm i
+      - run:
+          name: Get backend url
+          command: |
+            # your code here
+            export BACKEND_IP=$(curl -H "token: $MEM_TOKEN" --request GET https://api.memstash.io/values/backend-url)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+      - run: 
+         name: Backed with url 
+         command: |
+          cd frontend
+          npm run build     
+      - run:
+          name: Deploy frontend objects
+          command: aws s3 cp --recursive frontend/dist s3://udapeople-<< pipeline.parameters.workflow-id >>
+      - cleanup-s3
+      - revert-migrations
+      - destroy-environment      
+       
 
   smoke-test:
     docker:
@@ -413,9 +418,6 @@ jobs:
               --stack-name "udapeople-cloudfront" \
               --parameter-overrides WorkflowID="<< pipeline.parameters.workflow-id >>" \
               --tags project=udapeople
-
-
-
   cleanup:
     docker:
       - image: amazon/aws-cli  
@@ -470,7 +472,7 @@ workflows:
           requires: [configure-infrastructure]
           context: slack-secrets 
       - deploy-frontend:
-          requires: [run-migrations]
+          requires: [deploy-backend]
           context: slack-secrets 
       - deploy-backend:
           requires: [run-migrations]
