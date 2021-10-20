@@ -413,9 +413,9 @@ jobs:
           name: Update cloudfront distribution
           command: |
               # Deploy new one
-              aws cloudformation create \
-              --template-file .circleci/files/cloudfront.yml \
+              aws cloudformation create-stack \
               --stack-name "udapeople-cloudfront" \
+              --template-file .circleci/files/cloudfront.yml \
               --parameter-overrides WorkflowID="<< pipeline.parameters.workflow-id >>" \
               --tags project=udapeople
   cleanup:
