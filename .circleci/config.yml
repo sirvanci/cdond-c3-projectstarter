@@ -417,7 +417,7 @@ jobs:
                aws cloudformation deploy \
                --template-file .circleci/files/cloudfront.yml \
                --stack-name "udapeople-cloudfront" \
-               --parameter-overrides WorkflowID=1cf9e2b \
+               --parameter-overrides WorkflowID="<< pipeline.parameters.workflow-id >>" \
                --tags  Key=project,Value=udapeople
 
       - revert-migrations
