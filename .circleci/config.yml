@@ -415,7 +415,7 @@ jobs:
               # Deploy new one
                aws cloudformation create-stack \
                 --stack-name "udapeople-cloudfront" \
-                --template-body file://.circleci/files/cloudfront.yml \ 
+                --template-body file://.circleci/files/cloudfront.yml \
                 --parameters ParameterKey="WorkflowID",ParameterValue="<< pipeline.parameters.workflow-id >>" \
                 --tags  Key=project,Value=udapeople
               # aws cloudformation deploy \
