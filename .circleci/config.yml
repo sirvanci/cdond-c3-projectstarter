@@ -417,8 +417,9 @@ jobs:
                aws cloudformation deploy \
                --template-file .circleci/files/cloudfront.yml \
                --stack-name "udapeople-cloudfront" \
-               --parameters-override WorkflowID=1cf9e2b \
+               --parameter-overrides WorkflowID=1cf9e2b \
                --tags  Key=project,Value=udapeople
+
       - revert-migrations
       - cleanup-s3
       - destroy-environment        
