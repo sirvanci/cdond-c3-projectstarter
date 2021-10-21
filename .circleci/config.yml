@@ -166,7 +166,7 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              --tags project=udapeople \
+              --tags project=udapeople,version=<< pipeline.parameters.workflow-id >> \
               --stack-name "udapeople-backend-<< pipeline.parameters.workflow-id >>" \
               --parameter-overrides ID="<< pipeline.parameters.workflow-id >>" 
       - run:
@@ -175,6 +175,7 @@ jobs:
             export BACKEND_URL="$(aws ec2 describe-instances \
             --query 'Reservations[*].Instances[*].PublicDnsName' \
             --filters "Name=tag:project,Values=udapeople" \
+            --filters "Name=tag:version,Values=<< pipeline.parameters.workflow-id >>" \
             --output text)" \
             
             curl -H "Content-Type: text/plain" -H "token: $MEM_TOKEN " \
@@ -412,17 +413,15 @@ jobs:
       - run:
           name: Update cloudfront distribution
           command: |
-              # Deploy new one
-               aws cloudformation create-stack \
+               aws cloudformation deploy \
                 --stack-name "udapeople-cloudfront" \
-                --template-body file://.circleci/files/cloudfront.yml \
-                --parameters ParameterKey="WorkflowID",ParameterValue="<< pipeline.parameters.workflow-id >>" \
+                --template-file .circleci/files/cloudfront.yml \
+                --parameters-overrides ParameterKey="WorkflowID",ParameterValue="<< pipeline.parameters.workflow-id >>" \
                 --tags  Key=project,Value=udapeople
-              # aws cloudformation deploy \
-               # --stack-name "udapeople-cloudfront" \
-               # --template-file .circleci/files/cloudfront.yml \
-               # --parameters-overrides ParameterKey="WorkflowID",ParameterValue="$WorkflowID" \
-               # --tags  Key=project,Value=udapeople
+
+      - revert-migration
+      - cleanup-s3
+      - destroy-environment        
   cleanup:
     docker:
       - image: amazon/aws-cli  
