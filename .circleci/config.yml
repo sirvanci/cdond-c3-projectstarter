@@ -418,7 +418,7 @@ jobs:
                --template-file .circleci/files/cloudfront.yml \
                --stack-name "udapeople-cloudfront" \
                --parameter-overrides WorkflowID="<< pipeline.parameters.workflow-id >>" \
-               --tags  Key=project,Value=udapeople
+               --tags project=udapeople
 
       - revert-migrations
       - cleanup-s3
