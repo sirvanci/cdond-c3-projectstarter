@@ -410,17 +410,9 @@ jobs:
          
   cloudfront-update:
     docker:
-      - image: woahbase/alpine-awscli  
+      - image: amazon/aws-cli 
     steps:
       - checkout
-      - add_ssh_keys:
-          fingerprints: ["${SSH_KEY}"]
-      - run:
-          name: Install dependencies
-          command: |
-            apk add curl
-            apk add --update npm
-            apk add --update ansible
       - run:
           name: Install dependencies
           command: |
@@ -432,12 +424,6 @@ jobs:
               --request PUT \
               --data "$OldWorkflowID" \
               https://api.memstash.io/values/oldCF-${CIRCLE_WORKFLOW_ID}  
-      - run:
-          name: Update Prometheus
-          command: |
-            export OLD_BACKEND_URL=$(curl -H "token: $MEM_TOKEN" --request GET https://api.memstash.io/values/old_backend-url)
-            export BACKEND_URL=$(curl -H "token: $MEM_TOKEN" --request GET https://api.memstash.io/values/backend-url)
-            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/prometheus.yml --extra-vars "old_backend_url=$OLD_BACKEND_URL" --extra-vars "new_backend_url=BACKEND_URL"        
       - run:
           name: Update cloudfront distribution
           command: |
