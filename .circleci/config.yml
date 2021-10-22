@@ -303,7 +303,7 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints: ["1a:ef:57:2b:7b:43:77:1b:c2:1c:3d:56:ba:7d:1b:28:b4:ee:e9:02"]
+          fingerprints: ["${SSH_KEY}"]
       - attach_workspace:
          at: ~/      
       - run:
@@ -437,7 +437,7 @@ jobs:
           command: |
             export OLD_BACKEND_URL=$(curl -H "token: $MEM_TOKEN" --request GET https://api.memstash.io/values/old_backend-url)
             export BACKEND_URL=$(curl -H "token: $MEM_TOKEN" --request GET https://api.memstash.io/values/backend-url)
-            ansible-playbook -v -i .circleci/ansible/inventory.txt .circleci/ansible/prometheus.yml --extra-vars "old_backend_url=$OLD_BACKEND_URL" --extra-vars "new_backend_url=BACKEND_URL"        
+            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/prometheus.yml --extra-vars "old_backend_url=$OLD_BACKEND_URL" --extra-vars "new_backend_url=BACKEND_URL"        
       - run:
           name: Update cloudfront distribution
           command: |
