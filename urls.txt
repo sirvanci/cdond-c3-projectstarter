@@ -2,13 +2,13 @@ Github:
 https://github.com/sirvanci/cdond-c3-projectstarter.git
 
 S3 Bucket:
-http://udapeople-6431c33.s3-website.eu-central-1.amazonaws.com
+https://udapeople-1138954.s3.eu-central-1.amazonaws.com/index.html#/employees
 
 CloudFront:
 https://d1j86vvm5shxds.cloudfront.net
 
 Backend:
-ec2-18-184-55-71.eu-central-1.compute.amazonaws.com
+http://ec2-52-58-203-195.eu-central-1.compute.amazonaws.com:3030
 
 Prometheus Server:
 ec2-3-124-11-48.eu-central-1.compute.amazonaws.com:9090
