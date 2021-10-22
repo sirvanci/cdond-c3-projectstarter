@@ -162,8 +162,21 @@ jobs:
           name: install jq && tar && gzip
           command: yum install jq tar gzip -y    
       - run:
+          name: MemCache new back-end url
+          command: |
+            export OLD_BACKEND_URL="$(aws ec2 describe-instances \
+            --query 'Reservations[*].Instances[*].PublicDnsName' \
+            --filters "Name=tag:project,Values=udapeople" \
+            --output text)" \
+            
+            curl -H "Content-Type: text/plain" -H "token: $MEM_TOKEN " \
+            --request PUT \
+            --data "$OLD_BACKEND_URL" \
+            https://api.memstash.io/values/old-backend-url    
+      - run:
           name: Ensure back-end infrastructure exists
           command: |
+            #new backend deploying....
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
               --tags project=udapeople \
@@ -171,7 +184,7 @@ jobs:
               --stack-name "udapeople-backend-<< pipeline.parameters.workflow-id >>" \
               --parameter-overrides ID="<< pipeline.parameters.workflow-id >>" 
       - run:
-          name: MemCache back-end url
+          name: MemCache new back-end url
           command: |
             export BACKEND_URL="$(aws ec2 describe-instances \
             --query 'Reservations[*].Instances[*].PublicDnsName' \
@@ -397,9 +410,15 @@ jobs:
          
   cloudfront-update:
     docker:
-      - image: amazon/aws-cli  
+      - image: woahbase/alpine-awscli  
     steps:
       - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            apk add curl
+            apk add --update npm
+            apk add --update ansible
       - run:
           name: Install dependencies
           command: |
@@ -411,6 +430,12 @@ jobs:
               --request PUT \
               --data "$OldWorkflowID" \
               https://api.memstash.io/values/oldCF-${CIRCLE_WORKFLOW_ID}  
+      - run:
+          name: sf
+          command: |
+            export OLD_BACKEND_URL=$(curl -H "token: $MEM_TOKEN" --request GET https://api.memstash.io/values/old_backend-url)
+            export BACKEND_URL=$(curl -H "token: $MEM_TOKEN" --request GET https://api.memstash.io/values/backend-url)
+            ansible-playbook -v -i .circleci/ansible/inventory.txt .circleci/ansible/prometheus.yml --extra-vars "old_backend_url=$OLD_BACKEND_URL" --extra-vars "new_backend_url=BACKEND_URL"        
       - run:
           name: Update cloudfront distribution
           command: |
@@ -425,7 +450,7 @@ jobs:
       - destroy-environment        
   cleanup:
     docker:
-      - image: amazon/aws-cli  
+      - image: amazon/aws-cli
     steps:
       - checkout
       - run:    

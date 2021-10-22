@@ -1,0 +1,9 @@
+
+- name: Supports a validate command
+  become: true
+  ansible.builtin.replace:
+    path: /etc/prometheus/prometheus.yml
+    regexp: '{{ old_backend_url }}'
+    replace: '{{ new_backend_url }}'
+
+
