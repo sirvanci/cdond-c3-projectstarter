@@ -482,7 +482,7 @@ workflows:
           requires: [build-backend]
           filters:
             branches:
-              only: [test-feature-branch]
+              only: [master]
           context: slack-secrets    
       - configure-infrastructure:
           requires: [deploy-infrastructure]
